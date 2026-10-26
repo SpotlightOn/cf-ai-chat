@@ -48,6 +48,37 @@ function getModel(modelId?: string): string {
   return DEFAULT_MODEL;
 }
 
+function unauthorized(): Response {
+  return new Response("Unauthorized", {
+    status: 401,
+    headers: {
+      "WWW-Authenticate": 'Basic realm="Cloudflare AI Chat"',
+      "Content-Type": "text/plain",
+    },
+  });
+}
+
+function checkBasicAuth(request: Request): Response | null {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader || !authHeader.startsWith("Basic ")) {
+    return unauthorized();
+  }
+
+  const base64 = authHeader.slice("Basic ".length);
+  let decoded: string;
+  try {
+    decoded = atob(base64);
+  } catch {
+    return unauthorized();
+  }
+
+  if (decoded !== "admin:admin") {
+    return unauthorized();
+  }
+
+  return null;
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -61,6 +92,12 @@ export default {
 
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
+    }
+
+    // Basic Auth
+    const authError = checkBasicAuth(request);
+    if (authError) {
+      return authError;
     }
 
     // API route for chat
