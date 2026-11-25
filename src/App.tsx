@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, FormEvent, KeyboardEvent } from "react";
+import { useState, useRef, useEffect, FormEvent, KeyboardEvent, type ReactNode } from "react";
 import "./App.css";
 
 interface Message {
@@ -13,6 +13,38 @@ interface Model {
   id: string;
   name: string;
   type: "text" | "image";
+  [key: string]: unknown;
+}
+
+function formatLabel(key: string): string {
+  return key
+    .replace(/_/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
+function renderValue(value: unknown): ReactNode {
+  if (value === null || value === undefined || value === "") return <span className="model-info-empty">—</span>;
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <span className="model-info-empty">—</span>;
+    const primitives = value.every((v) => ["string", "number", "boolean"].includes(typeof v));
+    if (primitives) {
+      return (
+        <ul className="model-info-props">
+          {value.map((v, i) => (
+            <li key={i}>{String(v)}</li>
+          ))}
+        </ul>
+      );
+    }
+    return <pre className="model-info-json">{JSON.stringify(value, null, 2)}</pre>;
+  }
+  if (typeof value === "object") {
+    return <pre className="model-info-json">{JSON.stringify(value, null, 2)}</pre>;
+  }
+  return String(value);
 }
 
 function App() {
@@ -24,6 +56,7 @@ function App() {
   const [selectedModel, setSelectedModel] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const infoDialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -194,26 +227,41 @@ function App() {
         </div>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           {models.length > 0 && (
-            <select
-              value={selectedModel}
-              onChange={handleModelChange}
-              disabled={isLoading}
-              style={{
-                padding: "0.5rem 0.75rem",
-                borderRadius: "8px",
-                border: "1px solid var(--border)",
-                background: "var(--surface)",
-                color: "var(--text-primary)",
-                fontSize: "0.875rem",
-                cursor: "pointer",
-              }}
-            >
-              {models.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
-            </select>
+            <>
+              <select
+                value={selectedModel}
+                onChange={handleModelChange}
+                disabled={isLoading}
+                style={{
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border)",
+                  background: "var(--surface)",
+                  color: "var(--text-primary)",
+                  fontSize: "0.875rem",
+                  cursor: "pointer",
+                }}
+              >
+                {models.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="info-btn"
+                title="Model info"
+                aria-label="Show model info"
+                onClick={() => infoDialogRef.current?.showModal()}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+              </button>
+            </>
           )}
           {messages.length > 0 && (
             <button className="clear-btn" onClick={clearChat} title="Start new chat">
@@ -323,6 +371,45 @@ function App() {
           )}
         </button>
       </form>
+
+      <dialog
+        ref={infoDialogRef}
+        className="model-info-dialog"
+        onClick={(e) => {
+          if (e.target === infoDialogRef.current) infoDialogRef.current.close();
+        }}
+      >
+        {currentModel && (() => {
+          const preferred = ["name", "id", "type", "task", "description", "properties"];
+          const entries = [
+            ...preferred.filter((k) => k in currentModel).map((k) => [k, currentModel[k]] as const),
+            ...Object.entries(currentModel).filter(([k]) => !preferred.includes(k)),
+          ];
+          return (
+            <div className="model-info-content">
+              <div className="model-info-header">
+                <h2>{currentModel.name}</h2>
+                <button
+                  type="button"
+                  className="model-info-close"
+                  aria-label="Close"
+                  onClick={() => infoDialogRef.current?.close()}
+                >
+                  ×
+                </button>
+              </div>
+              <dl className="model-info-list">
+                {entries.map(([key, value]) => (
+                  <div key={key} className="model-info-row">
+                    <dt>{formatLabel(key)}</dt>
+                    <dd>{renderValue(value)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          );
+        })()}
+      </dialog>
     </div>
   );
 }
