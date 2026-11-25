@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Fail fast with a readable message instead of a cryptic wrangler error,
       # and prove the token actually works before spending time on the build.
@@ -36,10 +36,11 @@ jobs:
         uses: pnpm/setup@v3
         with:
           version: 12
+          cache: true
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install dependencies

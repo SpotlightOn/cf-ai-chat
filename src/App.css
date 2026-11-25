@@ -292,6 +292,127 @@
   }
 }
 
+/* Model info */
+.info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  background: var(--surface);
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.info-btn:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.model-info-dialog {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  padding: 0;
+  width: min(720px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  inset: 0;
+  overflow: auto;
+}
+
+.model-info-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.model-info-content {
+  padding: 20px;
+}
+
+.model-info-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.model-info-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.model-info-close {
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.model-info-close:hover {
+  color: var(--text);
+}
+
+.model-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.model-info-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.model-info-list dt {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.model-info-list dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.model-info-list code {
+  font-size: 0.85em;
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.model-info-props {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.model-info-json {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.model-info-empty {
+  color: var(--text-muted);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .header {
@@ -308,5 +429,10 @@
 
   .message {
     max-width: 92%;
+  }
+
+  .model-info-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }

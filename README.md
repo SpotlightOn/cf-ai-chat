@@ -1,12 +1,12 @@
 # Cloudflare AI Chat
 
-A simple chat application with **Cloudflare Workers** + **Workers AI** and a React frontend (Vite). Now supports multiple models including text and image generation models.
+A simple chat application with **Cloudflare Workers** + **Workers AI** and a React frontend (Vite). Supports multiple text and image generation models.
 
 ## Features
 
 - 💬 Modern chat UI with auto-resizing input, message history, and loading states
-- 🤖 Multi-model support - switch between different AI models on the fly
-- 🖼️ Image generation support with models like Flux and Stable Diffusion
+- 🤖 Dynamic model list loaded from the Cloudflare Workers AI catalog
+- 🖼️ Image generation support for Text-to-Image models
 - 🌐 Deploy to Cloudflare Workers (single Worker serves frontend + API)
 - 🔥 Vite + React + TypeScript + Cloudflare Vite Plugin
 - 💾 Model selection persisted in localStorage
@@ -66,13 +66,13 @@ cloudflare-ai-chat/
 ## API
 
 ### `GET /api/models`
-Returns available models and default model.
+Returns the available models and default model. The list is loaded dynamically from the Cloudflare Workers AI catalog and cached for 5 minutes.
 
 ```json
 {
   "models": [
     { "id": "@cf/zai-org/glm-4.7-flash", "name": "GLM 4.7 Flash", "type": "text" },
-    { "id": "@cf/black-forest-labs/flux-1-schnell", "name": "Flux 1 Schnell (Image)", "type": "image" }
+    { "id": "@cf/black-forest-labs/flux-1-schnell", "name": "Flux 1 Schnell", "type": "image" }
   ],
   "defaultModel": "@cf/zai-org/glm-4.7-flash"
 }
@@ -119,29 +119,20 @@ Response: Returns image binary with `Content-Type: image/png`
 {
   "status": "ok",
   "defaultModel": "@cf/zai-org/glm-4.7-flash",
-  "models": 8
+  "models": 76
 }
 ```
 
-## Available Models
+## Dynamic Models
 
-**Text Models:**
-- `@cf/zai-org/glm-4.7-flash` (default)
-- `@cf/meta/llama-3.1-8b-instruct`
-- `@cf/meta/llama-3.2-3b-instruct`
-- `@cf/qwen/qwen1.5-14b-chat-awq`
-- `@cf/mistral/mistral-7b-instruct-v0.1`
+Models are fetched from the Cloudflare account's Workers AI catalog (`Text Generation` and `Text-to-Image` tasks). Set these Worker secrets/vars so the Worker can read the catalog:
 
-**Image Models:**
-- `@cf/black-forest-labs/flux-1-schnell`
-- `@cf/bytedance/stable-diffusion-xl-lightning`
-- `@cf/stabilityai/stable-diffusion-xl-base-1.0`
+```bash
+wrangler secret put CLOUDFLARE_API_TOKEN
+wrangler secret put CLOUDFLARE_ACCOUNT_ID
+```
 
-See all available models: [Cloudflare Workers AI Models](https://developers.cloudflare.com/workers-ai/models/)
-
-## Adding More Models
-
-To add more models, edit the `ALLOWED_MODELS` array in `worker/index.ts`. Make sure to set the correct `type` (`"text"` or `"image"`) as this determines which endpoint to use.
+The API token needs Workers AI read access. If these values are missing or the catalog request fails, the Worker falls back to a small built-in model list.
 
 ## License
 
